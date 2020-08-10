@@ -14,7 +14,8 @@
 (defn add-module [request]
   (let [data (data/load-data)]
     (data/dump-data {"edited-modules" (conj (get data "edited-modules") (:body request))
-                     "raw-modules" (rest (get data "raw-modules"))})))
+                     "raw-modules" (rest (get data "raw-modules"))})
+    (response {:result "OK"})))
 
 (defroutes routes
   (POST "/get-module" [] get-module)

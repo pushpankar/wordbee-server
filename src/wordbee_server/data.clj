@@ -12,7 +12,7 @@
 ;;   (json/read-str (slurp "resources/word2sentid.json")))
 
 (defn dump-data [data]
-  (spit "reasources/module.json" (json/write-str data)))
+  (spit "resources/modules.json" (json/write-str data)))
 
 (defn load-data []
   (json/read-str (slurp "resources/modules.json")))
