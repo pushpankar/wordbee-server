@@ -2,6 +2,14 @@
 
 A Clojure library designed to ... well, that part is up to you.
 
+## APIS
+In the light of new Idea, Data should be stored as:
+
+{:module {:module_id [word-id]}
+ :database {:word {:meanings [the-meanings]
+                   :synonyms [the-synonyms]
+                   :examples [the-examples]}}}
+
 ## Usage
 
 FIXME
