@@ -11,6 +11,13 @@
 ;; (def word->sentids
 ;;   (json/read-str (slurp "resources/word2sentid.json")))
 
+(def data {:module {:module_id [:word-id]}
+           :database {:word {:word :word
+                             :meanings [:the-meanings]
+                             :synonyms [:the-synonyms]
+                             :examples [:the-examples]}}})
+
+
 (defn dump-data [data]
   (spit "resources/modules.json" (json/write-str data)))
 

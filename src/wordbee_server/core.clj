@@ -7,14 +7,18 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.data :as data]))
 
+(defn get-word [request]
+  (let [word (:word (:params request))]
+    (get-in data/data [:database word])))
 
 (defn get-module [_]
   (response (first (get (data/load-data) "raw-modules"))))
 
 (defn add-module [request]
-  (let [data (data/load-data)]
-    (data/dump-data {"edited-modules" (conj (get data "edited-modules") (:body request))
-                     "raw-modules" (rest (get data "raw-modules"))})
+  (let [new-module (:body request)
+        new-words (map :word new-module)]
+    (update data/data :module conj new-words)
+    (map #(update-in data/data [:database (:word %)] %) new-module) ;; Take every word map, find it location and update it
     (response {:result "OK"})))
 
 (defroutes routes
