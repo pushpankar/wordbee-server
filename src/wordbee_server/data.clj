@@ -1,16 +1,23 @@
 (ns wordbee-server.data
   (:require [clojure.data.json :as json]))
 
-(def id->sent
-  (json/read-str (slurp "resources/id2sent.json")))
+;; Assuming here that data is saved as
+;; {:edited_modules: [],
+;;  :raw_modules: []}
 
-(def word->sentids
-  (json/read-str (slurp "resources/word2sentid.json")))
+;; (def id->sent
+;;   (json/read-str (slurp "resources/id2sent.json")))
 
-(defn dump [data]
-  (spit "module.json" (json/write-str data)))
+;; (def word->sentids
+;;   (json/read-str (slurp "resources/word2sentid.json")))
 
-(defn word->sent [word]
-  (let [sent_ids (get word->sentids word)
-        sent_id (rand-nth sent_ids)]
-    (get id->sent (str sent_id))))
+(defn dump-data [data]
+  (spit "reasources/module.json" (json/write-str data)))
+
+(defn load-data []
+  (json/read-str (slurp "resources/modules.json")))
+
+;; (defn word->sent [word]
+;;   (let [sent_ids (get word->sentids word)
+;;         sent_id (rand-nth sent_ids)]
+;;     (get id->sent (str sent_id))))

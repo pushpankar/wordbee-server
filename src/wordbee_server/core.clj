@@ -8,32 +8,24 @@
             [wordbee-server.data :as data]))
 
 
-(defn get-module [request]
-  (println request))
+(defn get-module [_]
+  (response (first (get (data/load-data) "raw-modules"))))
 
 (defn add-module [request]
-  ;; (data/dump (:body request))
-  (println request)
-  (response {:res "Ok!"}))
+  (let [data (data/load-data)]
+    (data/dump-data {"edited-modules" (conj (get data "edited-modules") (:body request))
+                     "raw-modules" (rest (get data "raw-modules"))})))
 
 (defroutes routes
-  (GET "/module/:id" [] get-module)
+  (POST "/get-module" [] get-module)
   (POST "/add-module" [] add-module))
-
-;; (defn get-sent [word]
-;;   (word->sent word))
-
-;; (defn handler [request]
-;;   (let [word (get-in request [:params "word"])
-;;         sent (get-sent word)]
-;;   (response {:sentence sent})))
 
 (def app
   (-> routes
       (wrap-cors    :access-control-allow-methods #{:get :post :delete :options}
                     :access-control-allow-headers #{:accept :content-type}
                     :access-control-allow-origin [#".*"])
-      ;; wrap-params
+      wrap-params
       wrap-json-body
       wrap-json-response))
 
