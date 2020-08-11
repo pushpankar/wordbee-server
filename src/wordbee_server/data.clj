@@ -11,11 +11,18 @@
 ;; (def word->sentids
 ;;   (json/read-str (slurp "resources/word2sentid.json")))
 
-(def data {:module {:module_id [:word-id]}
-           :database {:word {:word :word
-                             :meanings [:the-meanings]
-                             :synonyms [:the-synonyms]
-                             :examples [:the-examples]}}})
+
+(def data (atom {:module [[:word]] ; is a list of list
+                 :ignored-words #{:words}
+                 :tracked-words #{:words} ;; This can be inferred from module list
+                 ;; But this will be very convenient
+                 :database {:word {:word :word ;; This is for convienence
+                                   :meanings [:the-meanings] ;; This should be a set but api can't transmit set
+                                   :synonyms [:the-synonyms]
+                                   :examples [:the-examples]}}}))
+
+(defn reset [new-data]
+  (swap! data new-data))
 
 
 (defn dump-data [data]

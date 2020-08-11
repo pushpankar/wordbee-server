@@ -11,15 +11,39 @@
   (let [word (:word (:params request))]
     (get-in data/data [:database word])))
 
-(defn get-module [_]
-  (response (first (get (data/load-data) "raw-modules"))))
+(defn similar-words [request]
+  (let [word (:word (:params request))]
+    ;; Make a query some where
+    ;; It need to return only from the word which has not been added yet
+    ;; When I press delete word on the word I shall track that
+    ))
+
+(defn next-word [request]
+  ;; Maybe this is not required
+  ;; or it can return a random word which has not been added to the
+  ;; list any module yet
+  )
+
+;; The client should ask for a module id
+;; While creating modules I only need to know which words has not yet been used
+(defn get-module [request]
+  (let [id (get-in request [:params :id])]
+    (response {:word-list (get (:module data/data) id)})))
 
 (defn add-module [request]
   (let [new-module (:body request)
         new-words (map :word new-module)]
-    (update data/data :module conj new-words)
-    (map #(update-in data/data [:database (:word %)] %) new-module) ;; Take every word map, find it location and update it
+    ;; I needd to mutate the data set as well
+    (swap! data/data (update data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
+    (swap! data/data (map #(update-in data/data [:database (:word %)] %) new-module)) ;; Take every word map, find it location and update it
     (response {:result "OK"})))
+
+;; This function is required since I can't know from add-module fn
+;; which word had been ignored
+(defn ignore-word [request]
+  (let [word (get-in request [:params :word])]
+    ;; need to mutuate
+    (update data/data :ignored-words conj word)))
 
 (defroutes routes
   (POST "/get-module" [] get-module)
