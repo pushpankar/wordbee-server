@@ -24,7 +24,7 @@
 (defn prep []
   (let [data {:module [[]]
               :ingored-words #{}
-              :all-words (set ordered-by-meaning)
+              :all-words ordered-by-meaning
               :database {}}]
     (reduce #(assoc-in %1 [:database %2] {:word %2
                                           :meaning (get meanings %2)
