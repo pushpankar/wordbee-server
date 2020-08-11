@@ -30,20 +30,23 @@
   (let [id (get-in request [:params :id])]
     (response {:word-list (get (:module data/data) id)})))
 
+;; Create a module and update words definitions
 (defn add-module [request]
-  (let [new-module (:body request)
+  (let [update-words (fn [module]
+                       ;; Take every word map, find it location and update it
+                       (map #(update-in data/data [:database (:word %)] %) module))
+        new-module (:body request)
         new-words (map :word new-module)]
-    ;; I needd to mutate the data set as well
     (swap! data/data (update data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
-    (swap! data/data (map #(update-in data/data [:database (:word %)] %) new-module)) ;; Take every word map, find it location and update it
+    (swap! data/data (update-words new-module))
+    (swap! data/data (update data/data :tracked-words into new-words))
     (response {:result "OK"})))
 
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
 (defn ignore-word [request]
   (let [word (get-in request [:params :word])]
-    ;; need to mutuate
-    (update data/data :ignored-words conj word)))
+    (swap! data/data (update data/data :ignored-words conj word))))
 
 (defroutes routes
   (POST "/get-module" [] get-module)
