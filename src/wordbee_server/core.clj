@@ -22,11 +22,12 @@
              (:level-2-words @data/data))))
 
 (defn next-word [request]
-  (let [word (get-in request [:params "word"])
-        level2-words (level2-new-words)
-        word-index (.indexOf level2-words word)]
+  (let [level2-words (level2-new-words)
+        word (get-in request [:params "word"])
+        word-index (.indexOf level2-words word)
+        prev-index (if (< word-index 5) 0 (- word-index 5))]
     (response {:word (get level2-words (+ 1 word-index))
-               :sorrounding (subvec level2-words (- word-index 5) (+ word-index 5))})))
+               :sorrounding (subvec level2-words prev-index (+ word-index 5))})))
 
 ;; I also need to return sorrounding words
 
