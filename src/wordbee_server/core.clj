@@ -5,7 +5,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [GET POST defroutes]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [wordbee-server.data :as data]))
+            [wordbee-server.data :as data]
+            [clojure.set :as set]))
 
 (data/init)
 
@@ -13,10 +14,21 @@
   (let [word (:word (:params request))]
     (get-in data/data [:database word])))
 
+;; returns
+(defn level2-new-words []
+  (let [ignored-words (:ignored-words @data/data)
+        tracked-words (:tracked-words @data/data)
+        all-words (:all-words @data/data)
+        level-fn (fn [word] (get-in @data/data [:difficulty (keyword word)]))
+        compound-filter-fn #(and (complement (contains? (set/union ignored-words
+                                                                   tracked-words)
+                                                        %))
+                                 (= (level-fn %) 2))]
+    (filterv compound-filter-fn all-words)))
 
 (defn next-word [request]
   (let [word (get-in request [:params "word"])
-        level2-words (filterv #(= (get-in @data/data [:difficulty (keyword %)]) 2) (:all-words @data/data))
+        level2-words (level2-new-words)
         word-index (.indexOf level2-words word)]
     (response {:word (get level2-words (+ 1 word-index))
                :sorrounding (subvec level2-words (- word-index 5) (+ word-index 5))})))

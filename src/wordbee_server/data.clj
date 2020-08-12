@@ -29,7 +29,7 @@
                  :ignored-words #{}
                  :difficulty {}
                  :all-words [] ;; It is ordered by similarity
-                 :tracked-words #{} ;; This can be inferred from module list
+                 :tracked-words {} ;; This can be inferred from module list
                  ;; But this will be very convenient
                  :database {:word {:word :word ;; This is for convienence
                                    :meanings [:the-meanings] ;; This should be a set but api can't transmit set
