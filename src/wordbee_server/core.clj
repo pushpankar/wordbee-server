@@ -17,14 +17,9 @@
 ;; returns
 (defn level2-new-words []
   (let [ignored-words (:ignored-words @data/data)
-        tracked-words (:tracked-words @data/data)
-        all-words (:all-words @data/data)
-        level-fn (fn [word] (get-in @data/data [:difficulty (keyword word)]))
-        compound-filter-fn #(and (complement (contains? (set/union ignored-words
-                                                                   tracked-words)
-                                                        %))
-                                 (= (level-fn %) 2))]
-    (filterv compound-filter-fn all-words)))
+        tracked-words (:tracked-words @data/data)]
+    (filterv #(complement (contains? (set/union ignored-words tracked-words) %))
+             (:level-2-words @data/data))))
 
 (defn next-word [request]
   (let [word (get-in request [:params "word"])
