@@ -2,27 +2,18 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as str]))
 
-;; Assuming here that data is saved as
-;; {:edited_modules: [],
-;;  :raw_modules: []}
-
-;; (def id->sent
-;;   (json/read-str (slurp "resources/id2sent.json")))
-
-;; (def word->sentids
-;;   (json/read-str (slurp "resources/word2sentid.json")))
 
 (defn load-data [path]
   (json/read-str (slurp path)))
 
-(def difficulty (load-data "resources/difficulty.json"))
-(def ordered-by-meaning (str/split (slurp "resources/ordered_words.txt") #"\n"))
-(def synonyms (load-data "resources/synonyms.json"))
-(def examples (load-data "resources/examples.json"))
-(def meanings (json/read-str (slurp "resources/word-meaning.json")))
-
 (defn prep []
-  (let [data {:module [[]]
+  (let [difficulty (load-data "resources/difficulty.json")
+        ordered-by-meaning (str/split (slurp "resources/ordered_words.txt") #"\n")
+        synonyms (load-data "resources/synonyms.json")
+        examples (load-data "resources/examples.json")
+        meanings (json/read-str (slurp "resources/word-meaning.json"))
+        data {:module [[]]
+              :difficulty difficulty
               :ingored-words #{}
               :all-words ordered-by-meaning
               :database {}}]
@@ -32,6 +23,7 @@
                                           :examples (get examples %2)})
             data
             ordered-by-meaning)))
+
 
 (def data (atom {:module [[:word]] ; is a list of list
                  :ignored-words #{:words}
