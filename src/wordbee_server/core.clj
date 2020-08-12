@@ -7,27 +7,22 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.data :as data]))
 
+(data/init)
+
 (defn get-word [request]
   (let [word (:word (:params request))]
     (get-in data/data [:database word])))
 
-;; Or maybe I should already organize words by its similarity
-;; Database should have a list of words in order with a heirarchical
-;; clustering
-(defn similar-words [request]
-  (let [word (:word (:params request))]
-    ;; Make a query some where
-    ;; It need to return only from the word which has not been added yet
-    ;; When I press delete word on the word I shall track that
-    ;; return one words or list of words
-    ))
 
 (defn next-word [request]
-  ;; Maybe this is not required
-  ;; or it can return a random word which has not been added to the
-  ;; list any module yet
-  ;; will first filter words by difficulty keeping the order intact then give the next word in the list
-  )
+  (let [word (get-in request [:params "word"])
+        level2-words (filterv #(= (get-in @data/data [:difficulty (keyword %)]) 2) (:all-words @data/data))
+        word-index (.indexOf level2-words word)]
+    (println word-index)
+    (response {:word (get level2-words (+ 1 word-index))
+               :sorrounding (subvec level2-words (- word-index 5) (+ word-index 5))})))
+
+;; I also need to return sorrounding words
 
 ;; The client should ask for a module id
 (defn get-module [request]
@@ -42,20 +37,21 @@
                        (map #(update-in data/data [:database (:word %)] %) module))
         new-module (:body request)
         new-words (map :word new-module)]
-    (swap! data/data (update data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
-    (swap! data/data (update-words new-module))
-    (swap! data/data (update data/data :tracked-words into new-words))
+    (reset! data/data (update data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
+    (reset! data/data (update-words new-module))
+    (reset! data/data (update data/data :tracked-words into new-words))
     (response {:result "OK"})))
 
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
 (defn ignore-word [request]
   (let [word (get-in request [:params :word])]
-    (swap! data/data (update data/data :ignored-words conj word))))
+    (reset! data/data (update data/data :ignored-words conj word))))
 
 (defroutes routes
   (POST "/get-module" [] get-module)
-  (POST "/add-module" [] add-module))
+  (POST "/add-module" [] add-module)
+  (POST "/next-word" [] next-word))
 
 (def app
   (-> routes
