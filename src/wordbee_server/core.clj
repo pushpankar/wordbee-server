@@ -40,15 +40,18 @@
     (response {:word-list (get (:module @data/data) id)})))
 
 
+(defn update-word [db mapping]
+  (let [word (keyword (get mapping "word"))]
+    (assoc-in db [:database word] mapping)))
+
 ;; Create a module and update words definitions
 (defn add-module [request]
-  (let [update-words (fn [module]
-                       ;; Take every word map, find it location and update it
-                       (map #(update-in @data/data [:database (:word %)] %) module))
+  (let [update-words (fn [modules]
+                       (reduce update-word @data/data modules))
         new-module (:body request)
-        new-words (map :word new-module)]
-    (println request)
-    (reset! data/data (update @data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
+        new-words (map #(get % "word") new-module)]
+    (reset! data/data (update @data/data :module conj new-words))
+    (println (first new-module))
     (reset! data/data (update-words new-module))
     (response {:result "OK"})))
 

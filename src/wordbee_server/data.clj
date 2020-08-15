@@ -12,7 +12,7 @@
         synonyms (load-data "resources/synonyms.json")
         examples (load-data "resources/examples.json")
         meanings (json/read-str (slurp "resources/word-meaning.json"))
-        data {:module [[]]
+        data {:module []
               :difficulty difficulty
               :all-words ordered-by-meaning
               :level-2-words (filterv #(= (get difficulty (keyword %)) 2) ordered-by-meaning)
@@ -25,7 +25,7 @@
             ordered-by-meaning)))
 
 
-(def data (atom {:module [[]] ; is a list of list
+(def data (atom {:module [] ; is a list of list
                  :difficulty {}
                  :level-2-words []
                  :all-words [] ;; It is ordered by similarity
