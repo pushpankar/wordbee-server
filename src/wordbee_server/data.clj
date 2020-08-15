@@ -27,7 +27,7 @@
 
 (def data (atom {:module [[]] ; is a list of list
                  :difficulty {}
-                 :level-2-words #{}
+                 :level-2-words []
                  :all-words [] ;; It is ordered by similarity
                  ;; But this will be very convenient
                  :database {:word {:word :word ;; This is for convienence

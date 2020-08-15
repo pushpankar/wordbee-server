@@ -5,8 +5,7 @@
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [GET POST defroutes]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [wordbee-server.data :as data]
-            [clojure.set :as set]))
+            [wordbee-server.data :as data]))
 
 (data/init)
 
@@ -14,17 +13,12 @@
   (let [word (:word (:params request))]
     (get-in data/data [:database word])))
 
-;; returns
-;; (defn level2-new-words []
-;;   (let [ignored-words (:ignored-words @data/data)
-;;         tracked-words (:tracked-words @data/data)]
-;;     (filterv #(complement (contains? (set/union ignored-words tracked-words) %))
-;;              (:level-2-words @data/data))))
 
 (defn next-word [word]
   (let [level2-words (:level-2-words @data/data)
         word-index (+ (.indexOf level2-words word) 1)]
     (get-in @data/data [:database (keyword (get level2-words word-index))])))
+
 
 (defn surrounding-words [word]
   (let [level2-words (:level-2-words @data/data)
@@ -33,15 +27,18 @@
         end (min (+ word-index 5) (count level2-words))]
     (subvec level2-words start end)))
 
+
 (defn next-word-api [request]
-  (let [word (or (get-in request [:body "word"]) (:last-queried @data/data))]
+  (let [word (or (get-in request [:body "word"]) (-> (:module @data/data) last last))]
     (response (assoc (next-word word) :surrounding-words (surrounding-words word)))))
+
 
 ;; The client should ask for a module id
 (defn get-module [request]
   (let [id (get-in request [:params :id])]
     ;; @TODO return data with words => IN V2
     (response {:word-list (get (:module @data/data) id)})))
+
 
 ;; Create a module and update words definitions
 (defn add-module [request]
@@ -52,8 +49,8 @@
         new-words (map :word new-module)]
     (reset! data/data (update @data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
     (reset! data/data (update-words new-module))
-    (reset! data/data (update @data/data :tracked-words into new-words))
     (response {:result "OK"})))
+
 
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
