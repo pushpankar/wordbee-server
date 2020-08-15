@@ -18,7 +18,7 @@
               :level-2-words (filterv #(= (get difficulty (keyword %)) 2) ordered-by-meaning)
               :database {}}]
     (reduce #(assoc-in %1 [:database %2] {:word %2
-                                          :meaning (set (get meanings %2))
+                                          :meanings (set (get meanings %2))
                                           :synonyms (set (get synonyms (keyword %2)))
                                           :examples (set (get examples (keyword %2)))})
             data
@@ -39,4 +39,4 @@
     (reset! data (load-data "resources/database.json")))
 
 (defn dump-data [data]
-  (spit "resources/modules.json" (json/write-str data)))
+  (spit "resources/database.json" (json/write-str data)))

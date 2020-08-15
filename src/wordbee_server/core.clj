@@ -47,6 +47,7 @@
                        (map #(update-in @data/data [:database (:word %)] %) module))
         new-module (:body request)
         new-words (map :word new-module)]
+    (println request)
     (reset! data/data (update @data/data :module conj new-words)) ;; Need to ensure that a word had not been sent for editing twice
     (reset! data/data (update-words new-module))
     (response {:result "OK"})))
@@ -62,8 +63,7 @@
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/add-module" [] add-module)
-  (POST "/next-word" [] next-word-api)
-  (POST "/ignore-word" [] ignore-word))
+  (POST "/next-word" [] next-word-api))
 
 (def app
   (-> routes
