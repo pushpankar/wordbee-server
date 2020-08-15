@@ -20,8 +20,8 @@
               :database {}}]
     (reduce #(assoc-in %1 [:database %2] {:word %2
                                           :meaning (get meanings %2)
-                                          :synonyms (get synonyms %2)
-                                          :examples (get examples %2)})
+                                          :synonyms (get synonyms (keyword %2))
+                                          :examples (get examples (keyword %2))})
             data
             ordered-by-meaning)))
 
