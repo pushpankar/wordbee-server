@@ -15,21 +15,27 @@
     (get-in data/data [:database word])))
 
 ;; returns
-(defn level2-new-words []
-  (let [ignored-words (:ignored-words @data/data)
-        tracked-words (:tracked-words @data/data)]
-    (filterv #(complement (contains? (set/union ignored-words tracked-words) %))
-             (:level-2-words @data/data))))
+;; (defn level2-new-words []
+;;   (let [ignored-words (:ignored-words @data/data)
+;;         tracked-words (:tracked-words @data/data)]
+;;     (filterv #(complement (contains? (set/union ignored-words tracked-words) %))
+;;              (:level-2-words @data/data))))
 
-(defn next-word [request]
-  (let [level2-words (level2-new-words)
-        word (get-in request [:body "word"])
-        word-index (.indexOf level2-words word)
-        prev-index (if (< word-index 5) 0 (- word-index 5))
-        result (get-in @data/data [:database (keyword (get level2-words (+ 1 word-index)))])]
-    (response (assoc result :sorrounding (subvec level2-words prev-index (+ word-index 5))))))
+(defn next-word [word]
+  (let [level2-words (:level-2-words @data/data)
+        word-index (+ (.indexOf level2-words word) 1)]
+    (get-in @data/data [:database (keyword (get level2-words word-index))])))
 
-;; I also need to return sorrounding words
+(defn surrounding-words [word]
+  (let [level2-words (:level-2-words @data/data)
+        word-index (+ (.indexOf level2-words word) 1)
+        start (max 0 (- word-index 5))
+        end (min (+ word-index 5) (count level2-words))]
+    (subvec level2-words start end)))
+
+(defn next-word-api [request]
+  (let [word (or (get-in request [:body "word"]) (:last-queried @data/data))]
+    (response (assoc (next-word word) :surrounding-words (surrounding-words word)))))
 
 ;; The client should ask for a module id
 (defn get-module [request]
@@ -52,14 +58,14 @@
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
 (defn ignore-word [request]
-  (let [word (get-in request [:params "word"])]
+  (let [word (get-in request [:body "word"])]
     (reset! data/data (update @data/data :ignored-words conj word))
     (response {:result "OK"})))
 
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/add-module" [] add-module)
-  (POST "/next-word" [] next-word)
+  (POST "/next-word" [] next-word-api)
   (POST "/ignore-word" [] ignore-word))
 
 (def app
