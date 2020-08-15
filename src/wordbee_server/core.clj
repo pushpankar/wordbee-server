@@ -24,7 +24,7 @@
   (let [level2-words (:level-2-words @data/data)
         word-index (+ (.indexOf level2-words word) 1)
         start (max 0 (- word-index 5))
-        end (min (+ word-index 5) (count level2-words))]
+        end (min (+ word-index 6) (count level2-words))]
     (subvec level2-words start end)))
 
 
@@ -51,7 +51,6 @@
         new-module (:body request)
         new-words (map #(get % "word") new-module)]
     (reset! data/data (update @data/data :module conj new-words))
-    (println (first new-module))
     (reset! data/data (update-words new-module))
     (response {:result "OK"})))
 
