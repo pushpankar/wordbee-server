@@ -7,7 +7,7 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.data :as data]))
 
-(data/init)
+;; (data/init)
 
 (defn get-word [request]
   (let [word (:word (:params request))]
@@ -62,10 +62,15 @@
     (reset! data/data (update @data/data :ignored-words conj word))
     (response {:result "OK"})))
 
+(defn list-modules [_]
+  (response {:result "OK"
+             :data (:module @data/data)}))
+
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/add-module" [] add-module)
-  (POST "/next-word" [] next-word-api))
+  (POST "/next-word" [] next-word-api)
+  (POST "/all-modules" [] list-modules))
 
 (def app
   (-> routes
