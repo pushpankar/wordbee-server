@@ -35,9 +35,9 @@
 
 ;; The client should ask for a module id
 (defn get-module [request]
-  (let [id (get-in request [:params :id])]
-    ;; @TODO return data with words => IN V2
-    (response {:word-list (get (:module @data/data) id)})))
+  (let [id (get-in request [:body "id"])
+        module-words (get (:module @data/data) id)]
+    (response {:word-list (map #(get-in @data/data [:database (keyword %)]) module-words)})))
 
 
 (defn update-word [db mapping]
