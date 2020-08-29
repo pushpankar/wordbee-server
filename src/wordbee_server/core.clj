@@ -7,7 +7,6 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.data :as data]))
 
-;; (data/init)
 
 (defn get-word [request]
   (let [word (:word (:params request))]
@@ -16,8 +15,17 @@
 
 (defn next-word [word]
   (let [level2-words (:level-2-words @data/data)
-        word-index (+ (.indexOf level2-words word) 1)]
-    (get-in @data/data [:database (keyword (get level2-words word-index))])))
+        word-index (+ (.indexOf level2-words word) 1)
+        data (get-in @data/data [:database (keyword (get level2-words word-index))])]
+    (update data :examples #(sort-by count %))))
+
+
+;; This function is required since I can't know from add-module fn
+;; which word had been ignored
+(defn ignore-word [request]
+  (let [word (get-in request [:body "word"])]
+    (reset! data/data (update @data/data :ignored-words conj word))
+    (response {:result "OK"})))
 
 
 (defn surrounding-words [word]
@@ -37,30 +45,17 @@
 (defn get-module [request]
   (let [id (get-in request [:body "id"])
         module-words (get (:module @data/data) id)]
+    (println id)
     (response {:word-list (map #(get-in @data/data [:database (keyword %)]) module-words)})))
 
 
-(defn update-word [db mapping]
-  (let [word (keyword (get mapping "word"))]
-    (assoc-in db [:database word] mapping)))
-
-;; Create a module and update words definitions
-(defn add-module [request]
-  (let [update-words (fn [modules]
-                       (reduce update-word @data/data modules))
-        new-module (:body request)
-        new-words (map #(get % "word") new-module)]
-    (reset! data/data (update @data/data :module conj new-words))
-    (reset! data/data (update-words new-module))
+(defn save-word [request]
+  (let [word-data (:body request)
+        word (get word-data "word")]
+    (reset! data/data (update @data/data :module conj word))
+    (reset! data/data (assoc-in @data/data [:database (keyword word)] word-data))
     (response {:result "OK"})))
 
-
-;; This function is required since I can't know from add-module fn
-;; which word had been ignored
-(defn ignore-word [request]
-  (let [word (get-in request [:body "word"])]
-    (reset! data/data (update @data/data :ignored-words conj word))
-    (response {:result "OK"})))
 
 (defn list-modules [_]
   (response {:result "OK"
@@ -68,9 +63,10 @@
 
 (defroutes routes
   (POST "/get-module" [] get-module)
-  (POST "/add-module" [] add-module)
+  (POST "/save-word" [] save-word)
+  ;; (POST "/add-module" [] add-module)
   (POST "/next-word" [] next-word-api)
-  (POST "/all-modules" [] list-modules))
+  (POST "/list-modules" [] list-modules))
 
 (def app
   (-> routes
