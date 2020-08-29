@@ -37,7 +37,7 @@
 
 
 (defn next-word-api [request]
-  (let [word (or (get-in request [:body "word"]) (-> (:module @data/data) last last))]
+  (let [word (or (get-in request [:body "word"]) (-> (:module @data/data) last))]
     (response (assoc (next-word word) :surrounding-words (surrounding-words word)))))
 
 
@@ -64,7 +64,6 @@
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/save-word" [] save-word)
-  ;; (POST "/add-module" [] add-module)
   (POST "/next-word" [] next-word-api)
   (POST "/list-modules" [] list-modules))
 
