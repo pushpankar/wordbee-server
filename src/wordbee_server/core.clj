@@ -5,7 +5,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [POST defroutes]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [wordbee-server.db :as db]))
+            [wordbee-server.db :as db]
+            [clojure.walk :as walk]))
 
 
 (defn get-word [request]
@@ -48,7 +49,7 @@
 (defn save-word [request]
   (let [word-data (:body request)
         word (get word-data "word")]
-    (db/update-word word-data)
+    (db/update-word (walk/keywordize-keys word-data))
     (db/add-to-module word)
     (response {:result "OK"})))
 

@@ -1,6 +1,7 @@
 (ns wordbee-server.db
   (:require [monger.core :as mg]
-            [monger.collection :as mc]))
+            [monger.collection :as mc]
+            [monger.operators :refer :all]))
 
 (def conn (mg/connect))
 (def db (mg/get-db conn "wordbee"))
@@ -9,11 +10,11 @@
 
 
 (defn get-word [word]
-  (mc/find-one-as-map db "dictionary" {:word word}))
+  (update (mc/find-one-as-map db "dictionary" {:word word}) :_id str))
 
 
 (defn update-word [dictionary]
-  (mc/update db "dictionary" {:word (:word dictionary)} dictionary))
+  (mc/update db "dictionary" {:word (:word dictionary)} {$set dictionary}))
 
 
 (defn next-word [word]
@@ -26,4 +27,4 @@
   (:words (mc/find-one-as-map db "added" {:key k})))
 
 (defn add-to-module [word]
-  (mc/update db "added" {:key "all"} {:words (conj (module-words "all") word)}))
+  (mc/update db "added" {:key "all"} {$set {:words (conj (module-words "all") word)}}))
