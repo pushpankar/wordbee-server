@@ -3,63 +3,59 @@
             [ring.util.response :refer [response]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.params :refer [wrap-params]]
-            [compojure.core :refer [GET POST defroutes]]
+            [compojure.core :refer [POST defroutes]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [wordbee-server.data :as data]))
+            [wordbee-server.db :as db]))
 
 
 (defn get-word [request]
   (let [word (:word (:params request))]
-    (get-in data/data [:database word])))
-
-
-(defn next-word [word]
-  (let [level2-words (:level-2-words @data/data)
-        word-index (+ (.indexOf level2-words word) 1)
-        data (get-in @data/data [:database (keyword (get level2-words word-index))])]
-    (update data :examples #(sort-by count %))))
-
+    (db/get-word word)))
 
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
 (defn ignore-word [request]
   (let [word (get-in request [:body "word"])]
-    (reset! data/data (update @data/data :ignored-words conj word))
+    ;; (reset! data/data (update @data/data :ignored-words conj word))
+    (println word)
     (response {:result "OK"})))
 
 
 (defn surrounding-words [word]
-  (let [level2-words (:level-2-words @data/data)
-        word-index (+ (.indexOf level2-words word) 1)
+  (let [word-index (.indexOf db/ordered-words word)
         start (max 0 (- word-index 5))
-        end (min (+ word-index 6) (count level2-words))]
-    (subvec level2-words start end)))
+        end (min (+ word-index 6) (count db/ordered-words))]
+    (subvec db/ordered-words start end)))
 
 
 (defn next-word-api [request]
-  (let [word (or (get-in request [:body "word"]) (-> (:module @data/data) last))]
-    (response (assoc (next-word word) :surrounding-words (surrounding-words word)))))
+  (let [word (or (get-in request [:body "word"]) (-> (db/module-words "all") last))
+        word-defn (db/next-word word)]
+    (response (assoc word-defn :surrounding-words (surrounding-words (:word word-defn))))))
 
 
 ;; The client should ask for a module id
+;; @TODO Need to be updated
 (defn get-module [request]
   (let [id (get-in request [:body "id"])
-        module-words (get (:module @data/data) id)]
+        module-words (db/module-words "all")]
     (println id)
-    (response {:word-list (map #(get-in @data/data [:database (keyword %)]) module-words)})))
+    (println module-words)
+    (response {:word-list []})))
+    ;; (response {:word-list (map #(get-in @data/data [:database (keyword %)]) module-words)})))
 
 
 (defn save-word [request]
   (let [word-data (:body request)
         word (get word-data "word")]
-    (reset! data/data (update @data/data :module conj word))
-    (reset! data/data (assoc-in @data/data [:database (keyword word)] word-data))
+    (db/update-word word-data)
+    (db/add-to-module word)
     (response {:result "OK"})))
 
 
 (defn list-modules [_]
   (response {:result "OK"
-             :data (:module @data/data)}))
+             :data (db/module-words "all")}))
 
 (defroutes routes
   (POST "/get-module" [] get-module)
