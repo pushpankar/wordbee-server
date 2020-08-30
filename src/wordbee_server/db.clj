@@ -14,7 +14,8 @@
 
 
 (defn update-word [dictionary]
-  (mc/update db "dictionary" {:word (:word dictionary)} {$set dictionary}))
+  (let [data (select-keys dictionary [:word :meanings :synonyms :examples :difficulty])]
+    (mc/update db "dictionary" {:word (:word dictionary)} {$set data})))
 
 
 (defn next-word [word]
