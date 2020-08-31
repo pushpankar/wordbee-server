@@ -31,8 +31,10 @@
 
 
 (defn next-word-api [request]
-  (let [word (or (get-in request [:body "word"]) (-> (db/module-words "all") last))
+  (let [module (or (get-in request [:body "path"]) "all")
+        word (or (get-in request [:body "word"]) (db/last-word module))
         word-defn (db/next-word word)]
+    (println module)
     (response (assoc word-defn :surrounding-words (surrounding-words (:word word-defn))))))
 
 
