@@ -11,16 +11,11 @@
   (:gen-class))
 
 
-(defn get-word [request]
-  (let [word (:word (:params request))]
-    (db/get-word word)))
-
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
 (defn ignore-word [request]
   (let [word (get-in request [:body "word"])]
     ;; (reset! data/data (update @data/data :ignored-words conj word))
-    (println word)
     (response {:result "OK"})))
 
 
@@ -29,6 +24,10 @@
         start (max 0 (- word-index 5))
         end (min (+ word-index 6) (count db/ordered-words))]
     (subvec db/ordered-words start end)))
+
+(defn get-word [request]
+  (let [word (get-in request [:body "word"])]
+    (response (assoc (db/get-word word) :surrounding-words (surrounding-words word)))))
 
 
 (defn next-word-api [request]
@@ -63,6 +62,7 @@
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/save-word" [] save-word)
+  (POST "/get-word" [] get-word)
   (POST "/next-word" [] next-word-api)
   (POST "/list-modules" [] list-modules))
 
