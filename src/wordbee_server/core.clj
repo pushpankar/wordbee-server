@@ -1,5 +1,6 @@
 (ns wordbee-server.core
-  (:require [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
+  (:require [ring.adapter.jetty :as jetty]
+            [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.util.response :refer [response]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.params :refer [wrap-params]]
@@ -75,3 +76,8 @@
 
 (def reloadable-app
   (wrap-reload #'app))
+
+(defn -main
+  "Entry point"
+  []
+  (jetty/run-jetty app {:port 3000}))
