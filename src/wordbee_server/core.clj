@@ -7,7 +7,8 @@
             [compojure.core :refer [POST defroutes]]
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.db :as db]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk])
+  (:gen-class))
 
 
 (defn get-word [request]

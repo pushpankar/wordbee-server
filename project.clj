@@ -11,4 +11,5 @@
                  [compojure "1.5.2"]
                  [ring "1.8.1"]]
   :repl-options {:init-ns wordbee-server.core}
+  :aot [wordbee-server.core]
   :main wordbee-server.core)
