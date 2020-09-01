@@ -28,9 +28,8 @@
   (:words (mc/find-one-as-map db "added" {:key k})))
 
 (defn add-to-module [word module]
-  (mc/update db "added" {:key module} {$set {:words (conj (module-words module) word)}}))
+  (mc/update db "added" {:key module} {$set {:words (conj (module-words module) word)}} {:upsert true}))
 
 (defn last-word [module]
   (let [words (module-words module)]
-    (println module)
-    (or (-> words last) (get ordered-words (-> module (subs 1) Integer/parseInt (* 1000))))))
+    (or (-> words last) (get ordered-words module))))

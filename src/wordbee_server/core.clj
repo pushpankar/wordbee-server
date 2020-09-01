@@ -10,6 +10,11 @@
             [clojure.walk :as walk])
   (:gen-class))
 
+;; utils
+(defn parse-module [module]
+  (try (-> module (subs 1) Integer/parseInt (* 1000))
+       (catch Exception ex "all")))
+
 
 ;; This function is required since I can't know from add-module fn
 ;; which word had been ignored
@@ -31,7 +36,7 @@
 
 
 (defn next-word-api [request]
-  (let [module (or (get-in request [:body "path"]) "all")
+  (let [module (parse-module (get-in request [:body "path"]))
         word (or (get-in request [:body "word"]) (db/last-word module))
         word-defn (db/next-word word)]
     (println module)
@@ -43,17 +48,18 @@
 (defn get-module [request]
   (let [id (get-in request [:body "id"])
         module-words (db/module-words "all")]
-    (println id)
     (println module-words)
     (response {:word-list []})))
     ;; (response {:word-list (map #(get-in @data/data [:database (keyword %)]) module-words)})))
 
 
 (defn save-word [request]
-  (let [word-data (:body request)
+  (let [module (parse-module (get-in request [:body "path"]))
+        word-data (:body request)
         word (get word-data "word")]
+    (println word module)
     (db/update-word (walk/keywordize-keys word-data))
-    (db/add-to-module word)
+    (db/add-to-module word module)
     (response {:result "OK"})))
 
 
