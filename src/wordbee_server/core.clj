@@ -39,7 +39,6 @@
   (let [module (parse-module (get-in request [:body "path"]))
         word (or (get-in request [:body "word"]) (db/last-word module))
         word-defn (db/next-word word)]
-    (println module)
     (response (assoc word-defn :surrounding-words (surrounding-words (:word word-defn))))))
 
 
@@ -47,10 +46,8 @@
 ;; @TODO Need to be updated
 (defn get-module [request]
   (let [id (get-in request [:body "id"])
-        module-words (db/module-words "all")]
-    (println module-words)
-    (response {:word-list []})))
-    ;; (response {:word-list (map #(get-in @data/data [:database (keyword %)]) module-words)})))
+        module-words (db/module-words id)]
+    (response {:word-list (map db/get-word module-words)})))
 
 
 (defn save-word [request]
