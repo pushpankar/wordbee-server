@@ -27,6 +27,9 @@
 (defn module-words [k]
   (:words (mc/find-one-as-map db "added" {:key k})))
 
+(defn module-names []
+  (map #(:key %) (mc/find-maps db "added")))
+
 (defn add-to-module [word module]
   (mc/update db "added" {:key module} {$set {:words (conj (module-words module) word)}} {:upsert true}))
 

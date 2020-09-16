@@ -61,8 +61,9 @@
 
 
 (defn list-modules [_]
-  (response {:result "OK"
-             :data (db/module-words "all")}))
+  (let [module-names (db/module-names)]
+    (response {:result "OK"
+               :data (map (fn [key] {:key key :words (db/module-words key)}) module-names)})))
 
 (defroutes routes
   (POST "/get-module" [] get-module)
