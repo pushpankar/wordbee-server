@@ -87,4 +87,4 @@
 (defn -main
   "Entry point"
   []
-  (jetty/run-jetty app {:port 3000}))
+  (jetty/run-jetty app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
