@@ -10,9 +10,11 @@ In the light of new Idea, Data should be stored as:
                    :synonyms [the-synonyms]
                    :examples [the-examples]}}}
 
-## Usage
 
-FIXME
+## Words to remove
+1. Nous
+2. Talent
+3. Cushions
 
 ## License
 
