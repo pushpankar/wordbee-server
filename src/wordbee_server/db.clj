@@ -8,24 +8,25 @@
 
 (def ordered-words (:words (mc/find-one-as-map db "ordered" {})))
 
-
-(defn get-word [word]
-  (update (mc/find-one-as-map db "dictionary" {:word word}) :_id str))
-
 (defn sort-examples
   "Takes word instance and sorts its examples by length"
   [datum]
   (update datum :examples #(sort-by count %)))
 
+(defn get-word [word]
+  (sort-examples (update (mc/find-one-as-map db "dictionary" {:word word}) :_id str)))
+
 (defn update-word [dictionary]
   (let [data (select-keys dictionary [:word :meanings :synonyms :examples :difficulty])]
     (mc/update db "dictionary" {:word (:word dictionary)} {$set data})))
 
-
 (defn next-word [word]
   (let [word-index (+ (.indexOf ordered-words word) 1)
-        next-word (get ordered-words word-index)]
-    (sort-examples (get-word next-word))))
+        next-word (get-word (get ordered-words word-index))]
+    (println (:difficulty next-word))
+    (if (>(:difficulty next-word) 1)
+      next-word
+      (recur (:word next-word)))))
 
 (defn module-words [k]
   (:words (mc/find-one-as-map db "added" {:key k})))

@@ -16,8 +16,8 @@
        (catch Exception ex "all")))
 
 
-;; This function is required since I can't know from add-module fn
-;; which word had been ignored
+;; This function is not at all used
+;; I am infering last used word from tracked list
 (defn ignore-word [request]
   (let [word (get-in request [:body "word"])]
     ;; (reset! data/data (update @data/data :ignored-words conj word))
@@ -30,11 +30,12 @@
         end (min (+ word-index 6) (count db/ordered-words))]
     (subvec db/ordered-words start end)))
 
+;; get word from the database and attach surrounding words
 (defn get-word [request]
   (let [word (get-in request [:body "word"])]
     (response (assoc (db/get-word word) :surrounding-words (surrounding-words word)))))
 
-
+;; This is a wrapper for get-word
 (defn next-word-api [request]
   (let [module (parse-module (get-in request [:body "path"]))
         word (or (get-in request [:body "word"]) (db/last-word module))
