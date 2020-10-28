@@ -66,12 +66,19 @@
     (response {:result "OK"
                :data (map (fn [key] {:key key :words (db/module-words key)}) module-names)})))
 
+(defn modules-info [_]
+  (let [module-names (db/module-names)]
+    (response {:result "OK"
+               :data (reduce #(assoc %1 %2 (db/module-words %2)) {} module-names)})))
+
+
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/save-word" [] save-word)
   (POST "/get-word" [] get-word)
   (POST "/next-word" [] next-word-api)
-  (POST "/list-modules" [] list-modules))
+  (POST "/list-modules" [] list-modules)
+  (POST "/modules-info" [] modules-info))
 
 (def app
   (-> routes
