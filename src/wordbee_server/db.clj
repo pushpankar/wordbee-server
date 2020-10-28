@@ -29,10 +29,10 @@
       (recur (:word next-word)))))
 
 (defn module-words [k]
-  (:words (mc/find-one-as-map db "added" {:key k})))
+  (:words (mc/find-one-as-map db "modules" {:key k})))
 
 (defn module-names []
-  (map #(:key %) (mc/find-maps db "added")))
+  (map #(:key %) (mc/find-maps db "modules")))
 
 (defn add-to-module [word module]
   (mc/update db "added" {:key module} {$set {:words (conj (module-words module) word)}} {:upsert true}))
