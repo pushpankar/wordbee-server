@@ -23,20 +23,23 @@
 (defn next-word [word]
   (let [word-index (+ (.indexOf ordered-words word) 1)
         next-word (get-word (get ordered-words word-index))]
-    (println (:difficulty next-word))
+    (println word-index)
     (if (>(:difficulty next-word) 1)
       next-word
       (recur (:word next-word)))))
 
-(defn module-words [k]
-  (:words (mc/find-one-as-map db "modules" {:key k})))
+(defn module-words
+  ([k]
+   (:words (mc/find-one-as-map db "modules" {:key k})))
+  ([doc-name k]
+   (:words (mc/find-one-as-map db doc-name {:key k}))))
 
 (defn module-names []
   (map #(:key %) (mc/find-maps db "modules")))
 
 (defn add-to-module [word module]
-  (mc/update db "added" {:key module} {$set {:words (conj (module-words module) word)}} {:upsert true}))
+  (mc/update db "added" {:key module} {$set {:words (conj (module-words "added" module) word)}} {:upsert true}))
 
 (defn last-word [module]
-  (let [words (module-words module)]
+  (let [words (module-words "added" module)]
     (or (-> words last) (get ordered-words module))))

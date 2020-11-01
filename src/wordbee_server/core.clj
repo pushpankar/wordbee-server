@@ -55,7 +55,6 @@
   (let [module (parse-module (get-in request [:body "path"]))
         word-data (:body request)
         word (get word-data "word")]
-    (println word module)
     (db/update-word (walk/keywordize-keys word-data))
     (db/add-to-module word module)
     (response {:result "OK"})))
@@ -95,4 +94,4 @@
 (defn -main
   "Entry point"
   []
-  (jetty/run-jetty app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
+  (jetty/run-jetty reloadable-app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
