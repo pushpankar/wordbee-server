@@ -1,13 +1,17 @@
 (ns wordbee-server.core
-  (:require [ring.adapter.jetty :as jetty]
+  (:require [ring.adapter.jetty9 :as jetty]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.util.response :refer [response]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.params :refer [wrap-params]]
-            [compojure.core :refer [POST defroutes]]
+            [compojure.core :refer [POST GET defroutes]]
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.db :as db]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [taoensso.sente :as sente]
+            [ring.middleware.session :refer [wrap-session]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [taoensso.sente.server-adapters.jetty9 :refer (get-sch-adapter)])
   (:gen-class))
 
 ;; utils
@@ -71,20 +75,40 @@
                :data (reduce #(assoc %1 %2 (db/module-words %2)) {} module-names)})))
 
 
+;;; Add this: --->
+(let [{:keys [ch-recv send-fn connected-uids
+              ajax-post-fn ajax-get-or-ws-handshake-fn]}
+      (sente/make-channel-socket! (get-sch-adapter) {})]
+
+  (def ring-ajax-post                ajax-post-fn)
+  (def ring-ajax-get-or-ws-handshake ajax-get-or-ws-handshake-fn)
+  (def ch-chsk                       ch-recv) ; ChannelSocket's receive channel
+  (def chsk-send!                    send-fn) ; ChannelSocket's send API fn
+  (def connected-uids                connected-uids) ; Watchable, read-only atom
+  )
+
+
+
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/save-word" [] save-word)
   (POST "/get-word" [] get-word)
   (POST "/next-word" [] next-word-api)
   (POST "/list-modules" [] list-modules)
-  (POST "/modules-info" [] modules-info))
+  (POST "/modules-info" [] modules-info)
+  ;;; Add these 2 entries: --->
+  (GET  "/chsk" req (ring-ajax-get-or-ws-handshake req))
+  (POST "/chsk" req (ring-ajax-post                req))
+  )
 
 (def app
   (-> routes
       (wrap-cors    :access-control-allow-methods #{:get :post :delete :options}
                     :access-control-allow-headers #{:accept :content-type}
                     :access-control-allow-origin [#".*"])
+      wrap-keyword-params
       wrap-params
+      wrap-session
       wrap-json-body
       wrap-json-response))
 

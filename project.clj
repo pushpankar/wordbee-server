@@ -8,6 +8,9 @@
                  [ring-cors "0.1.13"]
                  [org.clojure/data.json "1.0.0"]
                  [com.novemberain/monger "3.5.0"]
+                 [com.fzakaria/slf4j-timbre "0.3.20"]
+                 [info.sunng/ring-jetty9-adapter "0.14.0"]
+                 [com.taoensso/sente "1.16.0"]
                  [compojure "1.5.2"]
                  [ring "1.8.1"]]
   :repl-options {:init-ns wordbee-server.core}
