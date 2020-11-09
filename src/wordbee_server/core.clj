@@ -8,10 +8,10 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [wordbee-server.db :as db]
             [clojure.walk :as walk]
-            [taoensso.sente :as sente]
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [taoensso.sente.server-adapters.jetty9 :refer (get-sch-adapter)])
+
+            [wordbee-server.game :as game])
   (:gen-class))
 
 ;; utils
@@ -75,20 +75,6 @@
                :data (reduce #(assoc %1 %2 (db/module-words %2)) {} module-names)})))
 
 
-;;; Add this: --->
-(let [{:keys [ch-recv send-fn connected-uids
-              ajax-post-fn ajax-get-or-ws-handshake-fn]}
-      (sente/make-channel-socket! (get-sch-adapter) {})]
-
-  (def ring-ajax-post                ajax-post-fn)
-  (def ring-ajax-get-or-ws-handshake ajax-get-or-ws-handshake-fn)
-  (def ch-chsk                       ch-recv) ; ChannelSocket's receive channel
-  (def chsk-send!                    send-fn) ; ChannelSocket's send API fn
-  (def connected-uids                connected-uids) ; Watchable, read-only atom
-  )
-
-
-
 (defroutes routes
   (POST "/get-module" [] get-module)
   (POST "/save-word" [] save-word)
@@ -96,10 +82,11 @@
   (POST "/next-word" [] next-word-api)
   (POST "/list-modules" [] list-modules)
   (POST "/modules-info" [] modules-info)
-  ;;; Add these 2 entries: --->
-  (GET  "/chsk" req (ring-ajax-get-or-ws-handshake req))
-  (POST "/chsk" req (ring-ajax-post                req))
-  )
+
+  ;; Game routes
+  (GET "/new-game" req (game/new-game req))
+  (GET  "/chsk" req (game/ring-ajax-get-or-ws-handshake req))
+  (POST "/chsk" req (game/ring-ajax-post                req)))
 
 (def app
   (-> routes
@@ -110,12 +97,17 @@
       wrap-params
       wrap-session
       wrap-json-body
-      wrap-json-response))
+      wrap-json-response
+      wrap-reload))
 
-(def reloadable-app
-  (wrap-reload #'app))
+(defn start-web-server! []
+  (jetty/run-jetty app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
+
+(defn start! []
+  (game/start-router!)
+  (start-web-server!))
 
 (defn -main
   "Entry point"
   []
-  (jetty/run-jetty reloadable-app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
+  (start!))
