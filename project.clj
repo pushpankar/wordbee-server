@@ -4,20 +4,16 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.1"]
-                 [ring/ring-json "0.5.0"]
-                 [ring/ring-anti-forgery "1.3.0"]
-                 [ring-cors "0.1.13"]
                  [org.clojure/data.json "1.0.0"]
                  [com.novemberain/monger "3.5.0"]
-                 [com.fzakaria/slf4j-timbre "0.3.20"]
                  [org.clojure/core.async "1.3.610"]
-                 ;; [org.slf4j/slf4j-api "1.7.14"]
-                 [http-kit "2.5.0"]
-                 [com.taoensso/timbre "5.1.0"]
-                 [info.sunng/ring-jetty9-adapter "0.14.0"]
-                 [com.taoensso/sente "1.16.0"]
-                 [compojure "1.5.2"]
-                 [ring "1.8.1"]]
+                 [io.pedestal/pedestal.service       "0.5.8"]
+                 ;; [io.pedestal/pedestal.service-tools "0.5.8"] ;; Only needed for ns-watching; WAR tooling
+                 [io.pedestal/pedestal.route         "0.5.8"]
+                 [io.pedestal/pedestal.jetty         "0.5.8"]
+                 ;; [io.pedestal/pedestal.aws           "0.5.8"] ;; API-Gateway, Lambda, and X-Ray support
+                 [org.slf4j/slf4j-simple             "1.7.28"]
+                 ]
   :repl-options {:init-ns wordbee-server.core}
   :aot [wordbee-server.core]
   :main wordbee-server.core)
