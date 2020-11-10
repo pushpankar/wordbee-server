@@ -1,11 +1,51 @@
 (ns wordbee-server.core
   (:require [io.pedestal.http :as http]
-            [io.pedestal.http.route :as route])
+            [clojure.data.json :as json]
+            [io.pedestal.http.route :as route]
+            [wordbee-server.db :as db]
+            [io.pedestal.http.content-negotiation :as conneg])
 
   (:gen-class))
 
-(defn respond-hello [request]
-  {:status 200 :body "Hello"})
+(defn ok [body]
+  {:status 200 :body body})
+
+(defn not-found []
+  {:status 404 :body "Not found\n"})
+
+(def supported-types ["text/html" "application/edn" "application/json" "text/plain"])
+
+(def content-neg-intc (conneg/negotiate-content supported-types))
+
+(defn accepted-type
+  [context]
+  (get-in context [:request :accept :field] "text/plain"))
+
+(defn transform-content
+  [body content-type]
+  (case content-type
+    "text/html"        body
+    "text/plain"       body
+    "application/edn"  (pr-str body)
+    "application/json" (json/write-str body)))
+
+(defn coerce-to
+  [response content-type]
+  (-> response
+      (update :body transform-content content-type)
+      (assoc-in [:headers "Content-Type"] content-type)))
+
+(def coerce-body
+  {:name ::coerce-body
+   :leave
+   (fn [context]
+     (if (get-in context [:response :headers "Content-Type"])
+       context
+       (update-in context [:response] coerce-to (accepted-type context))))})
+
+
+(defn echo [req]
+  (ok req))
 
 ;; utils
 ;; (defn parse-module [module]
@@ -42,10 +82,11 @@
 
 ;; ;; The client should ask for a module id
 ;; ;; @TODO Need to be updated
-;; (defn get-module [request]
-;;   (let [id (get-in request [:body "id"])
-;;         module-words (db/module-words id)]
-;;     (response {:word-list (map db/get-word module-words)})))
+(defn get-module [request]
+  (let [id (get-in request [:body "id"])
+        module-words (db/module-words id)]
+    {:status 200
+     :body (map db/get-word module-words)}))
 
 
 ;; (defn save-word [request]
@@ -62,14 +103,20 @@
 ;;     (response {:result "OK"
 ;;                :data (map (fn [key] {:key key :words (db/module-words key)}) module-names)})))
 
-;; (defn modules-info [_]
-;;   (let [module-names (db/module-names)]
-;;     (response {:result "OK"
-;;                :data (reduce #(assoc %1 %2 (db/module-words %2)) {} module-names)})))
+(defn modules-with-words []
+  (let [module-names (db/module-names)]
+    (reduce #(assoc %1 %2 (db/module-words %2)) {} module-names)))
+
+
+(defn modules-info [req]
+  (ok (modules-with-words)))
 
 (def routes
   (route/expand-routes
-   #{["/greet" :get respond-hello :route-name :greet]}))
+   #{["/echo"         :get echo          :route-name :echo]
+     ["/modules-info" :get [coerce-body content-neg-intc modules-info]  :route-name :modules-info]
+     ["/get-module"   :get get-module    :route-name :get-module]
+     }))
 
 (def service-map
    {::http/routes routes
@@ -91,12 +138,13 @@
 ;;   )
 
 (defn start! []
-  ;; (db/init-db!)
+  (db/init-db!)
   (http/start (http/create-server service-map)))
 
 (defonce server (atom nil))
 
 (defn start-dev []
+  (db/init-db!)
   (reset! server (http/start (http/create-server
                               (assoc service-map ::http/join? false)))))
 
@@ -110,5 +158,4 @@
 (defn -main
   "Entry point"
   []
-  (start!)
-  )
+  (start!))
