@@ -12,6 +12,7 @@
                  [com.fzakaria/slf4j-timbre "0.3.20"]
                  [org.clojure/core.async "1.3.610"]
                  ;; [org.slf4j/slf4j-api "1.7.14"]
+                 [http-kit "2.5.0"]
                  [com.taoensso/timbre "5.1.0"]
                  [info.sunng/ring-jetty9-adapter "0.14.0"]
                  [com.taoensso/sente "1.16.0"]

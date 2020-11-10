@@ -1,5 +1,6 @@
 (ns wordbee-server.core
-  (:require [ring.adapter.jetty9 :as jetty]
+  (:use [org.httpkit.server :only [run-server]])
+  (:require ;[ring.adapter.jetty9 :as jetty]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.util.response :refer [response]]
             [ring.middleware.cors :refer [wrap-cors]]
@@ -86,9 +87,9 @@
   (POST "/modules-info" [] modules-info)
 
   ;; Game routes
-  ;; (GET "/new-game" req (game/new-game req))
-  ;; (GET  "/chsk" req (game/ring-ajax-get-or-ws-handshake req))
-  ;; (POST "/chsk" req (game/ring-ajax-post                req))
+  (GET "/new-game" req (game/new-game req))
+  (GET  "/chsk" req (game/ring-ajax-get-or-ws-handshake req))
+  (POST "/chsk" req (game/ring-ajax-post                req))
   )
 
 (def app
@@ -106,7 +107,8 @@
       ))
 
 (defn start-web-server! []
-  (jetty/run-jetty app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
+  ;(jetty/run-jetty app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
+  (run-server app {:port 3000}))
 
 (defn start! []
   (db/init-db!)
