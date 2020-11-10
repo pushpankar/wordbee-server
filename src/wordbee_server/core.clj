@@ -10,8 +10,10 @@
             [clojure.walk :as walk]
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
 
-            [wordbee-server.game :as game])
+            [wordbee-server.game :as game]
+            )
   (:gen-class))
 
 ;; utils
@@ -84,9 +86,10 @@
   (POST "/modules-info" [] modules-info)
 
   ;; Game routes
-  (GET "/new-game" req (game/new-game req))
-  (GET  "/chsk" req (game/ring-ajax-get-or-ws-handshake req))
-  (POST "/chsk" req (game/ring-ajax-post                req)))
+  ;; (GET "/new-game" req (game/new-game req))
+  ;; (GET  "/chsk" req (game/ring-ajax-get-or-ws-handshake req))
+  ;; (POST "/chsk" req (game/ring-ajax-post                req))
+  )
 
 (def app
   (-> routes
@@ -98,16 +101,20 @@
       wrap-session
       wrap-json-body
       wrap-json-response
-      wrap-reload))
+      ;; wrap-anti-forgery
+      wrap-reload
+      ))
 
 (defn start-web-server! []
   (jetty/run-jetty app {:port 3000 :ssl? true :ssl-port 8443 :keystore "keystore.jks" :key-password "199540" :join? true}))
 
 (defn start! []
+  (db/init-db!)
   (game/start-router!)
   (start-web-server!))
 
 (defn -main
   "Entry point"
   []
-  (start!))
+  (start!)
+  )

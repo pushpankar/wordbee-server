@@ -3,10 +3,11 @@
             [monger.collection :as mc]
             [monger.operators :refer :all]))
 
-(def conn (mg/connect))
-(def db (mg/get-db conn "wordbee"))
+(defn init-db! []
+  (def conn (mg/connect))
+  (def db (mg/get-db conn "wordbee"))
+  (def ordered-words (:words (mc/find-one-as-map db "ordered" {}))))
 
-(def ordered-words (:words (mc/find-one-as-map db "ordered" {})))
 
 (defn sort-examples
   "Takes word instance and sorts its examples by length"
