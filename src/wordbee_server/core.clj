@@ -113,6 +113,12 @@
 ;;     {:status 200
 ;;      :body (map db/get-word module-words)}))
 
+(def get-module
+  {:name :get-module
+   :enter (fn [context]
+            (let [module-id (get-in context [:request :path-params :id])
+                  module-words (db/module-words module-id)]
+              (assoc context :result (map db/get-word module-words))))})
 
 ;; (defn save-word [request]
 ;;   (let [module (parse-module (get-in request [:body "path"]))
@@ -137,12 +143,10 @@
 (def routes
   (route/expand-routes
    #{["/echo"         :get [coerce-body content-neg-intc echo]          :route-name :echo]
-     ;; ["/modules-info" :get [coerce-body content-neg-intc modules-info]  :route-name :modules-info]
-     ;; ["/get-module"   :get get-module    :route-name :get-module]
 
      ["/word"         :post echo                                                      :route-name :update-word]
      ["/word/:word"   :get  [coerce-body content-neg-intc entity-render get-word]     :route-name :query-word]
-     ["/module/:id"   :get  echo         :route-name :get-module]
+     ["/module/:id"   :get  [coerce-body content-neg-intc entity-render get-module]   :route-name :get-module]
      ["/module/:id"   :post echo         :route-name :create-module]
      ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules] :route-name :list-modules]
      }))
