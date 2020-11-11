@@ -1,5 +1,6 @@
 (ns wordbee-server.core
   (:require [io.pedestal.http :as http]
+            [io.pedestal.http.body-params :refer [body-params]]
             [clojure.data.json :as json]
             [io.pedestal.http.route :as route]
             [wordbee-server.db :as db]
@@ -140,6 +141,13 @@
 ;;     (db/add-to-module word module)
 ;;     (response {:result "OK"})))
 
+(def update-word
+  {:name :update-word
+   :enter (fn [context]
+            (let [data (get-in context [:request :json-params])]
+              (db/update-word data)
+              (db/add-to-module (:word data) "all")
+              (assoc context :result (created (:word data)))))})
 
 ;; (defn list-modules [_]
 ;;   (let [module-names (db/module-names)]
@@ -154,15 +162,15 @@
 
 (def routes
   (route/expand-routes
-   #{["/echo"         :get [coerce-body content-neg-intc echo]          :route-name :echo]
-
-     ["/word"         :post echo                                                      :route-name :update-word]
+   #{["/echo"         :get  echo          :route-name :echo]
+     ["/echo"         :post [(body-params) echo]          :route-name :echo-post]
+     ["/word"         :post [(body-params) coerce-body content-neg-intc entity-render update-word]     :route-name :update-word]
      ["/word/:word"   :get  [coerce-body content-neg-intc entity-render get-word]     :route-name :query-word]
      ["/module/:id"   :get  [coerce-body content-neg-intc entity-render get-module]   :route-name :get-module]
-     ["/module/:id"   :post echo         :route-name :create-module]
      ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules] :route-name :list-modules]
 
      ;; Dev apis
+     ["/module/:id"   :post echo         :route-name :create-module] ;; I am doing this manually
      ["/next-word/:word"    :get  [coerce-body content-neg-intc entity-render next-word wrap-context] :route-name :next-word]
      }))
 
