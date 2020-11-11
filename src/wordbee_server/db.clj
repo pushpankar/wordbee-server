@@ -44,3 +44,7 @@
 (defn last-word [module]
   (let [words (module-words "added" module)]
     (or (-> words last) (get ordered-words module))))
+
+(defn modules-with-words []
+  (let [module-names (module-names)]
+    (reduce #(assoc %1 %2 (module-words %2)) {} module-names)))

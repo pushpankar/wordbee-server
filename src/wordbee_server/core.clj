@@ -3,15 +3,28 @@
             [clojure.data.json :as json]
             [io.pedestal.http.route :as route]
             [wordbee-server.db :as db]
+            [io.pedestal.test :as test]
             [io.pedestal.http.content-negotiation :as conneg])
 
   (:gen-class))
 
-(defn ok [body]
-  {:status 200 :body body})
+(defn response [status body & {:as headers}]
+  {:status status :body body :headers headers})
+
+
+(def ok       (partial response 200))
+(def created  (partial response 201))
+(def accepted (partial response 202))
 
 (defn not-found []
-  {:status 404 :body "Not found\n"})
+  (response 404 "Not found \n"))
+
+
+(def entity-render
+  {:name :entity-render
+   :leave (fn [context]
+            (if-let [item (:result context)]
+              (assoc context :response (ok item))))})
 
 (def supported-types ["text/html" "application/edn" "application/json" "text/plain"])
 
@@ -39,13 +52,17 @@
   {:name ::coerce-body
    :leave
    (fn [context]
-     (if (get-in context [:response :headers "Content-Type"])
-       context
-       (update-in context [:response] coerce-to (accepted-type context))))})
+     (cond-> context
+       (nil? (get-in context [:response :headers "Content-Type"]))
+       (update-in [:response] coerce-to (accepted-type context))))})
 
-
-(defn echo [req]
-  (ok req))
+;; Routes
+(def echo
+  {:name :echo
+   :enter (fn [context]
+            (let [request (:request context)
+                  response (ok context)]
+              (assoc context :response response)))})
 
 ;; utils
 ;; (defn parse-module [module]
@@ -61,16 +78,24 @@
 ;;     (response {:result "OK"})))
 
 
-;; (defn surrounding-words [word]
-;;   (let [word-index (.indexOf db/ordered-words word)
-;;         start (max 0 (- word-index 5))
-;;         end (min (+ word-index 6) (count db/ordered-words))]
-;;     (subvec db/ordered-words start end)))
+(defn surrounding-words [word]
+  (let [word-index (.indexOf db/ordered-words word)
+        start (max 0 (- word-index 5))
+        end (min (+ word-index 6) (count db/ordered-words))]
+    (subvec db/ordered-words start end)))
 
-;; ;; get word from the database and attach surrounding words
+;; get word from the database and attach surrounding words
 ;; (defn get-word [request]
-;;   (let [word (get-in request [:body "word"])]
-;;     (response (assoc (db/get-word word) :surrounding-words (surrounding-words word)))))
+;;   (let [word ]
+;;     (println (:request request))
+;;     (ok (assoc (db/get-word word) :surrounding-words (surrounding-words word)))))
+
+(def get-word
+  {:name :get-word
+   :enter (fn [context]
+            (let [word (get-in context [:request :path-params :word])]
+              (assoc context :result (db/get-word word))))})
+
 
 ;; ;; This is a wrapper for get-word
 ;; (defn next-word-api [request]
@@ -82,11 +107,11 @@
 
 ;; ;; The client should ask for a module id
 ;; ;; @TODO Need to be updated
-(defn get-module [request]
-  (let [id (get-in request [:body "id"])
-        module-words (db/module-words id)]
-    {:status 200
-     :body (map db/get-word module-words)}))
+;; (defn get-module [request]
+;;   (let [id (get-in request [:body "id"])
+;;         module-words (db/module-words id)]
+;;     {:status 200
+;;      :body (map db/get-word module-words)}))
 
 
 ;; (defn save-word [request]
@@ -103,19 +128,23 @@
 ;;     (response {:result "OK"
 ;;                :data (map (fn [key] {:key key :words (db/module-words key)}) module-names)})))
 
-(defn modules-with-words []
-  (let [module-names (db/module-names)]
-    (reduce #(assoc %1 %2 (db/module-words %2)) {} module-names)))
+(def list-modules
+  {:name :list-modules
+   :enter (fn [context]
+            (assoc context :result (db/modules-with-words)))})
 
-
-(defn modules-info [req]
-  (ok (modules-with-words)))
 
 (def routes
   (route/expand-routes
-   #{["/echo"         :get echo          :route-name :echo]
-     ["/modules-info" :get [coerce-body content-neg-intc modules-info]  :route-name :modules-info]
-     ["/get-module"   :get get-module    :route-name :get-module]
+   #{["/echo"         :get [coerce-body content-neg-intc echo]          :route-name :echo]
+     ;; ["/modules-info" :get [coerce-body content-neg-intc modules-info]  :route-name :modules-info]
+     ;; ["/get-module"   :get get-module    :route-name :get-module]
+
+     ["/word"         :post echo                                                      :route-name :update-word]
+     ["/word/:word"   :get  [coerce-body content-neg-intc entity-render get-word]     :route-name :query-word]
+     ["/module/:id"   :get  echo         :route-name :get-module]
+     ["/module/:id"   :post echo         :route-name :create-module]
+     ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules] :route-name :list-modules]
      }))
 
 (def service-map
