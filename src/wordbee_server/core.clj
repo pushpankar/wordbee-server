@@ -93,13 +93,13 @@
   {:name :next-word
    :enter (fn [context]
             (let [word (get-in context [:request :path-params :word])
-                  new-word (or word (db/last-word "all"))]
+                  new-word (if (= word "dummy") (db/last-word "all") word)]
               (assoc context :result (db/get-word new-word))))})
 
 (def wrap-context
   {:name :wrap-context
-   :enter (fn [context]
-            (let [word (get-in context [:request :path-params :word])]
+   :leave (fn [context]
+            (let [word (get-in context [:result :word])]
               (assoc-in context [:result :surrounding-words] (surrounding-words word))))})
 
 (def get-word
