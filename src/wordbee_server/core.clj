@@ -89,6 +89,18 @@
 ;;   (let [word ]
 ;;     (println (:request request))
 ;;     (ok (assoc (db/get-word word) :surrounding-words (surrounding-words word)))))
+(def next-word
+  {:name :next-word
+   :enter (fn [context]
+            (let [word (get-in context [:request :path-params :word])
+                  new-word (or word (db/last-word "all"))]
+              (assoc context :result (db/get-word new-word))))})
+
+(def wrap-context
+  {:name :wrap-context
+   :enter (fn [context]
+            (let [word (get-in context [:request :path-params :word])]
+              (assoc-in context [:result :surrounding-words] (surrounding-words word))))})
 
 (def get-word
   {:name :get-word
@@ -149,6 +161,9 @@
      ["/module/:id"   :get  [coerce-body content-neg-intc entity-render get-module]   :route-name :get-module]
      ["/module/:id"   :post echo         :route-name :create-module]
      ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules] :route-name :list-modules]
+
+     ;; Dev apis
+     ["/next-word/:word"    :get  [coerce-body content-neg-intc entity-render next-word wrap-context] :route-name :next-word]
      }))
 
 (def service-map
