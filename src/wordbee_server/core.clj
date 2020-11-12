@@ -5,6 +5,7 @@
             [io.pedestal.http.route :as route]
             [wordbee-server.db :as db]
             [io.pedestal.test :as test]
+            [wordbee-server.ws :as ws]
             [io.pedestal.http.content-negotiation :as conneg])
 
   (:gen-class))
@@ -125,10 +126,13 @@
      ["/next-word/:word"    :get  [coerce-body content-neg-intc entity-render next-word wrap-context] :route-name :next-word]
      }))
 
+
+
 (def service-map
    {::http/routes routes
     ::http/type   :jetty
-    ::http/port   3000})
+    ::http/port   3000
+    ::http/container-options {:context-configurator ws/context-configurator-fn}})
 
 ;;   ;; Game routes
 ;;   (GET "/new-game" req (game/new-game req))
