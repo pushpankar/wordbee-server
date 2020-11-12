@@ -132,6 +132,7 @@
    {::http/routes routes
     ::http/type   :jetty
     ::http/port   3000
+    ::http/host   "0.0.0.0"
     ::http/container-options {:context-configurator ws/context-configurator-fn}})
 
 ;;   ;; Game routes
