@@ -24,12 +24,19 @@
            (send-msg user1 [:paired {:opponent user2}])
            (send-msg user2 [:paired {:opponent user1}])))
 
+;; Connection clean
+(defn close-later [session-id send-ch]
+  (go
+    (<! (async/timeout 300000))
+    (swap! ws-clients dissoc session-id)
+    (dissoc pairs session-id)))
 
 (defn new-ws-client
   [ws-session send-ch]
   (let [sessionid (nano-id)]
     (async/put! send-ch  (pr-str [:connected sessionid]))
-    (swap! ws-clients assoc sessionid send-ch)))
+    (swap! ws-clients assoc sessionid send-ch)
+    (close-later sessionid send-ch)))
 
 (defmulti msg-handler #(first %))
 
