@@ -111,15 +111,14 @@
    :enter (fn [context]
             (assoc context :result (db/modules-with-words)))})
 
-
 (def routes
   (route/expand-routes
-   #{["/echo"         :get  echo          :route-name :echo]
-     ["/echo"         :post [(body-params) echo]          :route-name :echo-post]
-     ["/word"         :post [(body-params) coerce-body content-neg-intc entity-render update-word]     :route-name :update-word]
-     ["/word/:word"   :get  [coerce-body content-neg-intc entity-render get-word]     :route-name :query-word]
-     ["/module/:id"   :get  [coerce-body content-neg-intc entity-render get-module]   :route-name :get-module]
-     ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules] :route-name :list-modules]
+   #{["/echo"         :get  echo                                                                    :route-name :echo]
+     ["/echo"         :post [(body-params) echo]                                                    :route-name :echo-post]
+     ["/word"         :post [(body-params) coerce-body content-neg-intc entity-render update-word]  :route-name :update-word]
+     ["/word/:word"   :get  [coerce-body content-neg-intc entity-render get-word]                   :route-name :query-word]
+     ["/module/:id"   :get  [coerce-body content-neg-intc entity-render get-module]                 :route-name :get-module]
+     ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules]               :route-name :list-modules]
 
      ;; Dev apis
      ["/module/:id"   :post echo         :route-name :create-module] ;; I am doing this manually
