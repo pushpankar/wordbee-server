@@ -13,6 +13,8 @@
                  [io.pedestal/pedestal.jetty         "0.5.8"]
                  ;; [io.pedestal/pedestal.aws           "0.5.8"] ;; API-Gateway, Lambda, and X-Ray support
                  [org.slf4j/slf4j-simple             "1.7.28"]
+                 [nano-id "1.0.0"]
+                 [org.clojure/core.match "1.0.0"]
                  ]
   :repl-options {:init-ns wordbee-server.core}
   :aot [wordbee-server.core]
