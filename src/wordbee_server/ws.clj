@@ -53,11 +53,14 @@
 (defmethod msg-handler :pair-me [[event userid msg]]
   (async/put! random-pool userid))
 
+(defmethod msg-handler :reconnect [[event userid msg]]
+  (swap! ws-clients update (:old-id msg) (get @ws-clients userid)))
+
 (defmethod msg-handler :ping-pong [[_ userid msg]]
   (async/go
     (println "Ping-pong")
     (<! (async/timeout 3000))
-    (send-msg userid [:ping-pong {:msg "Stop ping pong"}])))
+    (send-msg userid  [:ping-pong {:msg "Stop ping pong"}])))
 
 (defn close-handler [code msg]
   (match [(edn/read-string msg)]
