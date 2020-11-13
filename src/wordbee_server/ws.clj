@@ -35,7 +35,7 @@
   (go
     (<! (async/timeout 300000))
     (swap! ws-clients dissoc session-id)
-    (dissoc pairs session-id)))
+    (swap! pairs dissoc session-id)))
 
 (defn new-ws-client
   "New session handler"
@@ -66,7 +66,7 @@
   (match [(edn/read-string msg)]
          [{:userid userid}] (swap! ws-clients dissoc userid)
          :else nil)
-  (log/info :msg "WS closed: " :reason msg)
+  (log/info :msg "WS closed: " :reason msg :code code)
   )
 
 (def ws-paths
