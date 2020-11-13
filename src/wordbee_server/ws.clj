@@ -54,7 +54,7 @@
   (async/put! random-pool userid))
 
 (defmethod msg-handler :reconnect [[event userid msg]]
-  (swap! ws-clients update (:old-id msg) (get @ws-clients userid)))
+  (swap! ws-clients assoc (:old-id msg) (get @ws-clients userid)))
 
 (defmethod msg-handler :ping-pong [[_ userid msg]]
   (async/go
