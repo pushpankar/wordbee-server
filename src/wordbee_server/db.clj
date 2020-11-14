@@ -24,9 +24,8 @@
 (defn next-word [word]
   (let [word-index (+ (.indexOf ordered-words word) 1)
         next-word (get-word (get ordered-words word-index))]
-    (println word-index)
-    (if (>(:difficulty next-word) 1)
-      next-word
+    (if (> (:difficulty next-word) 1)
+      (:word next-word)
       (recur (:word next-word)))))
 
 (defn module-words

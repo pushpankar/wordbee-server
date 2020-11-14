@@ -76,7 +76,7 @@
   {:name :next-word
    :enter (fn [context]
             (let [word (get-in context [:request :path-params :word])
-                  new-word (if (= word "dummy") (db/last-word "all") word)]
+                  new-word (if (= word "dummy") (db/last-word "all") (db/next-word word))]
               (assoc context :result (db/get-word new-word))))})
 
 (def wrap-context
@@ -102,6 +102,8 @@
   {:name :update-word
    :enter (fn [context]
             (let [data (get-in context [:request :json-params])]
+              (println context)
+              (println data)
               (db/update-word data)
               (db/add-to-module (:word data) "all")
               (assoc context :result (created (:word data)))))})
@@ -117,19 +119,20 @@
    #{["/echo"         :get  echo                                                                    :route-name :echo]
      ["/echo"         :post [(body-params) echo]                                                    :route-name :echo-post]
      ["/word"         :post [(body-params) coerce-body content-neg-intc entity-render update-word]  :route-name :update-word]
-     ["/word/:word"   :get  [coerce-body content-neg-intc entity-render get-word]                   :route-name :query-word]
+     ["/word/:word"   :get  [coerce-body content-neg-intc entity-render wrap-context get-word]      :route-name :query-word]
      ["/module/:id"   :get  [coerce-body content-neg-intc entity-render get-module]                 :route-name :get-module]
      ["/modules"      :get  [coerce-body content-neg-intc entity-render list-modules]               :route-name :list-modules]
 
      ;; Dev apis
      ["/module/:id"   :post echo         :route-name :create-module] ;; I am doing this manually
-     ["/next-word/:word"    :get  [coerce-body content-neg-intc entity-render next-word wrap-context] :route-name :next-word]
+     ["/next-word/:word"    :get  [coerce-body content-neg-intc entity-render wrap-context next-word] :route-name :next-word]
      }))
 
 
 
 (def service-map
    {::http/routes routes
+    ::http/allowed-origins (constantly true)
     ::http/type   :jetty
     ::http/port   3000
     ::http/host   "0.0.0.0"
