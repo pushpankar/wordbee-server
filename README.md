@@ -1,20 +1,6 @@
 # wordbee_server
 
-A Clojure library designed to ... well, that part is up to you.
-
-## APIS
-In the light of new Idea, Data should be stored as:
-
-{:module {:module_id [word-id]}
- :database {:word {:meanings [the-meanings]
-                   :synonyms [the-synonyms]
-                   :examples [the-examples]}}}
-
-
-## Words to remove
-1. Nous
-2. Talent
-3. Cushions
+Backend for wordbee app
 
 ## License
 
